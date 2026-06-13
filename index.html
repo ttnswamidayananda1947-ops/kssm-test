@@ -3,63 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Netlify Gemini Chatbot</title>
+    <title>My Web AI</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: sans-serif; background-color: #ffffff; height: 100vh; display: flex; }
-        .left-panel { width: 40%; border-right: 2px solid #eeeeee; padding: 30px; display: flex; flex-direction: column; justify-content: center; background-color: #fafafa; }
-        textarea { width: 100%; height: 150px; padding: 15px; border: 2px solid #cccccc; border-radius: 8px; resize: none; font-size: 16px; margin-bottom: 15px; outline: none; }
-        button { width: 100%; padding: 12px; background-color: #0070f3; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        button:disabled { background-color: #cccccc; }
-        .right-panel { width: 60%; padding: 40px; display: flex; flex-direction: column; background-color: #ffffff; overflow-y: auto; }
-        .output-box { font-size: 18px; line-height: 1.6; color: #222222; white-space: pre-wrap; }
-        .status-text { color: #888888; font-style: italic; }
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+        h2 { text-align: center; color: #333; }
+        #chat-box { border: 1px solid #ccc; padding: 15px; height: 300px; overflow-y: auto; margin-bottom: 15px; border-radius: 5px; background: #f9f9f9; line-height: 1.5; }
+        .input-area { display: flex; gap: 10px; }
+        input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #0056b3; }
     </style>
 </head>
 <body>
 
-    <div class="left-panel">
-        <h2>Gemini AI உதவியாளர் (Netlify)</h2>
-        <textarea id="userInput" placeholder="உங்கள் கேள்வியை இங்கே டைப் செய்யுங்கள்..."></textarea>
-        <button id="sendBtn" onclick="askGemini()">கேள்வி கேள்</button>
-    </div>
-
-    <div class="right-panel">
-        <div id="outputBox" class="output-box">
-            <span class="status-text">இங்கே AI-இன் பதில் தோன்றும்...</span>
-        </div>
+    <h2>My Web AI Assistant</h2>
+    <div id="chat-box">உங்களுக்கு எப்படி உதவலாம்?</div>
+    
+    <div class="input-area">
+        <input type="text" id="user-input" placeholder="உங்கள் கேள்வியை இங்கே கேட்கவும்...">
+        <button onclick="askAI()">அனுப்பு</button>
     </div>
 
     <script>
-        async function askGemini() {
-            const inputEl = document.getElementById("userInput");
-            const outputEl = document.getElementById("outputBox");
-            const btnEl = document.getElementById("sendBtn");
-            
-            const text = inputEl.value.trim();
-            if (!text) return;
+        // எச்சரிக்கை: இதை Public GitHub-ல் push செய்ய வேண்டாம்!
+        const API_KEY = "AQ.Ab8RN6L5NgM3CAsfvJAOtaOikLpQkdrKtSR4CBN8PlYEoA4CoQ";
 
-            btnEl.disabled = true;
-            outputEl.innerHTML = `<span class="status-text">Gemini சிந்தித்துக் கொண்டிருக்கிறது...</span>`;
+        async function askAI() {
+            const prompt = document.getElementById("user-input").value;
+            const chatBox = document.getElementById("chat-box");
+            
+            if (!prompt) {
+                alert("தயவுசெய்து ஒரு கேள்வியை கேட்கவும்!");
+                return;
+            }
+
+            // யூசர் கேள்வியை சாட் பாக்சில் காட்டுதல்
+            chatBox.innerHTML = `<b>நீங்கள்:</b> ${prompt} <br><br> <i>AI யோசிக்கிறது...</i>`;
+            document.getElementById("user-input").value = ""; // இன்புட் பாக்ஸை க்ளியர் செய்ய
 
             try {
-                // Netlify Functions-ஐ அழைக்கும் வழி
-                const response = await fetch('/.netlify/functions/chat', {
+                // Gemini API-க்கு Request அனுப்புதல்
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ message: text })
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
                 });
 
                 const data = await response.json();
-                if (data.text) {
-                    outputEl.innerText = data.text;
+                
+                // AI-இன் பதிலை எடுத்து சாட் பாக்சில் காட்டுதல்
+                if(data.candidates && data.candidates.length > 0) {
+                    // குறிப்பு: \n (New line) களை <br> ஆக மாற்றுவது டெக்ஸ்டை சரியாக காட்டும்
+                    const aiText = data.candidates[0].content.parts[0].text.replace(/\n/g, '<br>');
+                    chatBox.innerHTML = `<b>நீங்கள்:</b> ${prompt} <br><br> <b>AI:</b> ${aiText}`;
                 } else {
-                    outputEl.innerText = "பதில் பெற முடியவில்லை. Netlify செட்டிங்ஸை சரிபார்க்கவும்.";
+                    chatBox.innerHTML = `<b>நீங்கள்:</b> ${prompt} <br><br> <b>AI:</b> மன்னிக்கவும், எனக்கு பதில் கிடைக்கவில்லை.`;
                 }
+
             } catch (error) {
-                outputEl.innerText = "இணைப்பில் தவறு நடந்துள்ளது!";
-            } finally {
-                btnEl.disabled = false;
+                console.error("Error:", error);
+                chatBox.innerHTML = `<b>நீங்கள்:</b> ${prompt} <br><br> <b style="color:red;">எரர்:</b> AI உடன் தொடர்பு கொள்ள முடியவில்லை. API Key சரியாக உள்ளதா என சரிபார்க்கவும்.`;
             }
         }
     </script>
