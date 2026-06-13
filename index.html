@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Gemini Chatbot</title>
+    <title>Netlify Gemini Chatbot</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: sans-serif; background-color: #ffffff; height: 100vh; display: flex; }
@@ -19,14 +19,14 @@
 <body>
 
     <div class="left-panel">
-        <h2>Gemini AI உதவியாளர்</h2>
+        <h2>Gemini AI உதவியாளர் (Netlify)</h2>
         <textarea id="userInput" placeholder="உங்கள் கேள்வியை இங்கே டைப் செய்யுங்கள்..."></textarea>
         <button id="sendBtn" onclick="askGemini()">கேள்வி கேள்</button>
     </div>
 
     <div class="right-panel">
         <div id="outputBox" class="output-box">
-            <span class="status-text">இங்கே AI-இன் பதில் வரும் (கார்டு தேவையில்லை, பாதுகாப்பானது)...</span>
+            <span class="status-text">இங்கே AI-இன் பதில் தோன்றும்...</span>
         </div>
     </div>
 
@@ -40,11 +40,11 @@
             if (!text) return;
 
             btnEl.disabled = true;
-            outputEl.innerHTML = `<span class="status-text">Gemini உங்களுக்காக சிந்தித்துக் கொண்டிருக்கிறது...</span>`;
+            outputEl.innerHTML = `<span class="status-text">Gemini சிந்தித்துக் கொண்டிருக்கிறது...</span>`;
 
             try {
-                // உங்கள் API Key Vercel-க்குள் பாதுகாப்பாக இருக்கும், இந்த URL மட்டும் தான் வெளியே தெரியும்
-                const response = await fetch('/api/chat', {
+                // Netlify Functions-ஐ அழைக்கும் வழி
+                const response = await fetch('/.netlify/functions/chat', {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ message: text })
@@ -54,10 +54,10 @@
                 if (data.text) {
                     outputEl.innerText = data.text;
                 } else {
-                    outputEl.innerText = "பதில் பெற முடியவில்லை. செட்டிங்ஸை சரிபார்க்கவும்.";
+                    outputEl.innerText = "பதில் பெற முடியவில்லை. Netlify செட்டிங்ஸை சரிபார்க்கவும்.";
                 }
             } catch (error) {
-                outputEl.innerText = "தவறு நடந்துள்ளது!";
+                outputEl.innerText = "இணைப்பில் தவறு நடந்துள்ளது!";
             } finally {
                 btnEl.disabled = false;
             }
